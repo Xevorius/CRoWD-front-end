@@ -1,9 +1,11 @@
 // chat_page.dart
 import 'package:flutter/material.dart';
-import 'api_service.dart';
+import '../api_service.dart';
 import 'message_page.dart';
 
 class ChatsPage extends StatelessWidget {
+  final token;
+  const ChatsPage({@required this.token,super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -13,10 +15,10 @@ class ChatsPage extends StatelessWidget {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text('CRoWD Chats'),
+          title: const Text('CRoWD Chats'),
         ),
         body: FutureBuilder<List<dynamic>>(
-          future: fetchChats(),
+          future: fetchChats(token: token),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
@@ -38,7 +40,7 @@ class ChatsPage extends StatelessWidget {
             }
 
             // By default, show a loading spinner.
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           },
         ),
       ),

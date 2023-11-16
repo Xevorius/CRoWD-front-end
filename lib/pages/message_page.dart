@@ -1,11 +1,11 @@
 // message_page.dart
 import 'package:flutter/material.dart';
-import 'api_service.dart';
+import '../api_service.dart';
 
 class MessagePage extends StatefulWidget {
   final int chatId;
 
-  MessagePage({required this.chatId});
+  const MessagePage({super.key, required this.chatId});
 
   @override
   _MessagePageState createState() => _MessagePageState();
@@ -41,7 +41,7 @@ class _MessagePageState extends State<MessagePage> {
                 }
 
                 // By default, show a loading spinner.
-                return CircularProgressIndicator();
+                return const CircularProgressIndicator();
               },
             ),
           ),
@@ -59,7 +59,7 @@ class _MessagePageState extends State<MessagePage> {
               sendMessage(widget.chatId, _controller.text);
               _controller.clear();
             },
-            child: Text('Send'),
+            child: const Text('Send'),
           ),
         ],
       ),

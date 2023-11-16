@@ -1,43 +1,169 @@
 // api_service.dart
 import 'dart:convert';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_client_helper/http_client_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:universal_html/html.dart' as html;
 
-Future<List<dynamic>> fetchChats() async {
-  var url = Uri.parse('https://crowd.pythonanywhere.com/chats/');
-  final response = await http.get(url);
+Future<List<dynamic>> fetchChats({required String token}) async {
+  var response;
+  if (!kIsWeb) {
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
 
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to load chats');
+    var url = 'http://crowd.pythonanywhere.com/chats/';
+
+    // Add the JWT token to the cookies
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', token)]
+    );
+
+    // Send the request
+    response = await dio.get(url);
+    if (response.statusCode == 200) {
+      return response.data;
+    } else {
+      // print(response!.request?.headers);
+      throw Exception('Failed to load chats');
+    }
+  }else{
+      var url = 'http://crowd.pythonanywhere.com/chats/';
+
+      // Set the JWT token as a cookie
+      html.document.cookie = 'jwt=$token;';
+
+      // Send the HTTP request
+      response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        // print(response!.request?.headers);
+        throw Exception('Failed to load chats');
+      }
   }
+
+
 }
 
 Future<List<dynamic>> fetchMessages(int chatId) async {
-  var url = Uri.parse('http://crowd.pythonanywhere.com/chats/$chatId/messages/');
-  final response = await http.get(url);
+  var response;
+  SharedPreferences pref = await SharedPreferences.getInstance();
 
+  var url = 'http://crowd.pythonanywhere.com/chats/$chatId/messages/';
+
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+  // Send the request
+  response = await dio.get(url);
   if (response.statusCode == 200) {
-    return json.decode(response.body);
+    return response.data;
   } else {
+    // print(response!.request?.headers);
     throw Exception('Failed to load messages');
   }
 }
 
 Future<void> sendMessage(int chatId, String text) async {
-  var url = Uri.parse('http://crowd.pythonanywhere.com/chats/$chatId/messages/');
+    var response;
+  SharedPreferences pref = await SharedPreferences.getInstance();
+
+  var url = 'http://crowd.pythonanywhere.com/chats/$chatId/messages/';
+
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+  // Send the request
+  response = await dio.post(url, data: {
+      'text': text,
+      'user': '1',
+    });
+  if (response.statusCode == 200) {
+    return response.data;
+  } else {
+    // print(response!.request?.headers);
+    throw Exception('Failed to send messages');
+  }
+}
+
+Future<String> login(String username, String password) async {
+  var url = Uri.parse('http://crowd.pythonanywhere.com/auth/login/');
+  final response = await HttpClientHelper.post(
+    url,
+    body: {
+      'username': username,
+      'password': password,
+    }
+  );
+
+  if (response!.statusCode == 200) {
+    return (json.decode(response.body)['jwt']);
+  } else {
+    throw Exception('Failed to login');
+  }
+}
+
+Future<void> signup(String username, String password) async {
+  var url = Uri.parse('https://crowd.pythonanywhere.com/auth/register');
   final response = await http.post(
     url,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
+      "Referer": "https://yoursite.com",
     },
     body: jsonEncode(<String, String>{
-      'text': text,
-      'user': '1',
+      'username': username,
+      'password': password,
     }),
   );
 
   if (response.statusCode != 201) {
-    throw Exception('Failed to send message');
+    throw Exception('Failed to signup');
+  }
+}
+
+Future<void> profile() async {
+var response;
+  SharedPreferences pref = await SharedPreferences.getInstance();
+
+  var url = 'http://crowd.pythonanywhere.com/auth/user';
+
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+  // Send the request
+  response = await dio.get(url,);
+  if (response.statusCode == 200) {
+    return response.data;
+  } else {
+    // print(response!.request?.headers);
+    throw Exception('Failed to retrieve profile');
   }
 }
