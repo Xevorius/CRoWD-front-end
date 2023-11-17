@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:crowd_front_end/api_service.dart';
+import 'package:crowd_front_end/pages/home.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QRViewExample extends StatefulWidget {
   const QRViewExample({super.key});
@@ -42,8 +46,7 @@ class _QRViewExampleState extends State<QRViewExample> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   if (result != null)
-                    Text(
-                        'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
+                    Text('Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')                    
                   else
                     const Text('Scan a code'),
                   Row(
@@ -85,32 +88,6 @@ class _QRViewExampleState extends State<QRViewExample> {
                       )
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            await controller?.pauseCamera();
-                          },
-                          child: const Text('pause',
-                              style: TextStyle(fontSize: 20)),
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            await controller?.resumeCamera();
-                          },
-                          child: const Text('resume',
-                              style: TextStyle(fontSize: 20)),
-                        ),
-                      )
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -146,8 +123,17 @@ class _QRViewExampleState extends State<QRViewExample> {
       this.controller = controller;
     });
     controller.scannedDataStream.listen((scanData) {
-      setState(() {
+      setState(() async {
         result = scanData;
+        if (result!=null){
+          final prefs = await SharedPreferences.getInstance();
+          await controller.pauseCamera();
+          print(result!.code.toString());
+          var decoded = jsonDecode(result!.code.toString().replaceAll("'", '"'));
+          print(decoded);
+          createChatForQr(decoded['id']);
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => HomePage(token: prefs.getString("token").toString(),)), (Route<dynamic> r) => false);
+        }
       });
     });
   }

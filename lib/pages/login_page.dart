@@ -1,3 +1,4 @@
+import 'package:crowd_front_end/pages/home.dart';
 import 'package:flutter/material.dart';
 import 'package:crowd_front_end/components/my_button.dart';
 import 'package:crowd_front_end/components/my_textfield.dart';
@@ -88,7 +89,7 @@ class LoginPage extends StatelessWidget {
                   final prefs = await SharedPreferences.getInstance();
                   final token = await login(usernameController.text, passwordController.text);
                   prefs.setString('token', token);
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatsPage(token: token,)),);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(token: token,)),);
                 },
               ),
 

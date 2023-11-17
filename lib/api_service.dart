@@ -11,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 
-Future<List<dynamic>> fetchChats({required String token}) async {
+Future<List<dynamic>> fetchChats() async {
+  SharedPreferences pref = await SharedPreferences.getInstance();
   var response;
   if (!kIsWeb) {
     var dio = Dio();
@@ -23,7 +24,7 @@ Future<List<dynamic>> fetchChats({required String token}) async {
     // Add the JWT token to the cookies
     (cj).saveFromResponse(
       Uri.parse(url), 
-      [Cookie('jwt', token)]
+      [Cookie('jwt', pref.getString('token').toString())]
     );
 
     // Send the request
@@ -38,7 +39,7 @@ Future<List<dynamic>> fetchChats({required String token}) async {
       var url = 'http://crowd.pythonanywhere.com/chats/';
 
       // Set the JWT token as a cookie
-      html.document.cookie = 'jwt=$token;';
+      html.document.cookie = 'jwt=${pref.getString('token')};';
 
       // Send the HTTP request
       response = await http.get(Uri.parse(url));
@@ -193,5 +194,34 @@ Future<List<int>?> fetchQr(String token) async {
   } else {
     // print(response!.request?.headers);
     throw Exception('Failed to retrieve profile');
+  }
+}
+
+Future<void> createChatForQr(int newFriend) async {
+  var response;
+  final prefs = SharedPreferences.getInstance();
+  SharedPreferences pref = await SharedPreferences.getInstance();
+
+  var url = 'http://crowd.pythonanywhere.com/chats/';
+
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+  // Send the request
+  response = await dio.post(url, data: {
+      'users': [JwtDecoder.decode(pref.getString('token').toString())['id'], newFriend],
+    });
+  if (response.statusCode == 200) {
+    return response.data;
+  } else {
+    // print(response!.request?.headers);
+    throw Exception('Failed to send messages');
   }
 }

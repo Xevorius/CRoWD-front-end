@@ -18,7 +18,7 @@ class ChatsPage extends StatelessWidget {
           title: const Text('CRoWD Chats'),
         ),
         body: FutureBuilder<List<dynamic>>(
-          future: fetchChats(token: token),
+          future: fetchChats(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(

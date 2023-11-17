@@ -44,7 +44,7 @@ class HomePage extends StatelessWidget{
             Expanded(
               child: TabBarView(children: [
                 FutureBuilder<List<dynamic>>(
-                  future: fetchChats(token: token),
+                  future: fetchChats(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return ListView.builder(
