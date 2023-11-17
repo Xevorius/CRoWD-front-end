@@ -1,10 +1,12 @@
 // api_service.dart
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_client_helper/http_client_helper.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
@@ -78,7 +80,8 @@ Future<List<dynamic>> fetchMessages(int chatId) async {
 }
 
 Future<void> sendMessage(int chatId, String text) async {
-    var response;
+  var response;
+  final prefs = SharedPreferences.getInstance();
   SharedPreferences pref = await SharedPreferences.getInstance();
 
   var url = 'http://crowd.pythonanywhere.com/chats/$chatId/messages/';
@@ -96,7 +99,7 @@ Future<void> sendMessage(int chatId, String text) async {
   // Send the request
   response = await dio.post(url, data: {
       'text': text,
-      'user': '1',
+      'user': JwtDecoder.decode(pref.getString('token').toString())['id'],
     });
   if (response.statusCode == 200) {
     return response.data;
@@ -160,6 +163,31 @@ var response;
 
   // Send the request
   response = await dio.get(url,);
+  if (response.statusCode == 200) {
+    return response.data;
+  } else {
+    // print(response!.request?.headers);
+    throw Exception('Failed to retrieve profile');
+  }
+}
+
+Future<List<int>?> fetchQr(String token) async {
+  SharedPreferences pref = await SharedPreferences.getInstance();
+
+  var url = 'http://crowd.pythonanywhere.com/auth/qr';
+
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+  // Send the request
+  final response = await dio.get<List<int>>(url, options: Options(responseType: ResponseType.bytes));
   if (response.statusCode == 200) {
     return response.data;
   } else {
