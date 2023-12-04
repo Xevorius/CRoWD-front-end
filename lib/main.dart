@@ -13,8 +13,8 @@ void main() async {
 class MyApp extends StatelessWidget {
   final token;
   const MyApp({
-    @required this.token,
-    super.key,
+      @required this.token,
+      super.key,
     });
 
   @override

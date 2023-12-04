@@ -1,15 +1,11 @@
-// api_service.dart
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:http/http.dart' as http;
 import 'package:http_client_helper/http_client_helper.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 
 Future<List<dynamic>> fetchChats() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
@@ -38,13 +34,20 @@ Future<List<dynamic>> fetchChats() async {
   }else{
       var url = 'http://crowd.pythonanywhere.com/chats/';
 
-      // Set the JWT token as a cookie
-      html.document.cookie = 'jwt=${pref.getString('token')};';
+  // Add the JWT token to the cookies 
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(url), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
 
       // Send the HTTP request
-      response = await http.get(Uri.parse(url));
+      response = await dio.get(url);
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        return response.data;
       } else {
         // print(response!.request?.headers);
         throw Exception('Failed to load chats');
@@ -129,7 +132,7 @@ Future<String> login(String username, String password) async {
 
 Future<void> signup(String username, String password) async {
   var url = Uri.parse('https://crowd.pythonanywhere.com/auth/register');
-  final response = await http.post(
+  final response = await HttpClientHelper.post(
     url,
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
@@ -141,13 +144,13 @@ Future<void> signup(String username, String password) async {
     }),
   );
 
-  if (response.statusCode != 201) {
+  if (response!.statusCode != 201) {
     throw Exception('Failed to signup');
   }
 }
 
 Future<void> profile() async {
-var response;
+  var response;
   SharedPreferences pref = await SharedPreferences.getInstance();
 
   var url = 'http://crowd.pythonanywhere.com/auth/user';
@@ -172,7 +175,7 @@ var response;
   }
 }
 
-Future<List<int>?> fetchQr(String token) async {
+Future<List<int>?> fetchQr() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
 
   var url = 'http://crowd.pythonanywhere.com/auth/qr';
@@ -199,7 +202,6 @@ Future<List<int>?> fetchQr(String token) async {
 
 Future<void> createChatForQr(int newFriend) async {
   var response;
-  final prefs = SharedPreferences.getInstance();
   SharedPreferences pref = await SharedPreferences.getInstance();
 
   var url = 'http://crowd.pythonanywhere.com/chats/';

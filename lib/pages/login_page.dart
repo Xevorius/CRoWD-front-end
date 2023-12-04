@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:crowd_front_end/components/my_button.dart';
 import 'package:crowd_front_end/components/my_textfield.dart';
 import 'package:crowd_front_end/components/square_tile.dart';
-import 'package:crowd_front_end/pages/chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_service.dart';
 
