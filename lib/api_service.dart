@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:crowd_front_end/models/power_share_models.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:http_client_helper/http_client_helper.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<List<dynamic>> fetchChats() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
@@ -113,43 +114,22 @@ Future<void> sendMessage(int chatId, String text) async {
   }
 }
 
-Future<String> login(String username, String password) async {
-  var url = Uri.parse('http://crowd.pythonanywhere.com/auth/login/');
-  final response = await HttpClientHelper.post(
-    url,
-    body: {
-      'username': username,
-      'password': password,
-    }
-  );
-
-  if (response!.statusCode == 200) {
-    return (json.decode(response.body)['jwt']);
-  } else {
-    throw Exception('Failed to login');
-  }
+Future<Response> login(String username, String password) async {
+  var url = 'http://crowd.pythonanywhere.com/auth/login/';
+  var dio = Dio();
+  var response = await dio.post(url, data: {'username': username,'password': password,});
+  return response;
 }
 
-Future<void> signup(String username, String password) async {
-  var url = Uri.parse('https://crowd.pythonanywhere.com/auth/register');
-  final response = await HttpClientHelper.post(
-    url,
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-      "Referer": "https://yoursite.com",
-    },
-    body: jsonEncode(<String, String>{
-      'username': username,
-      'password': password,
-    }),
-  );
+Future<Response> signup(String username, String password) async {
+  var url = 'http://crowd.pythonanywhere.com/auth/register/';
+  var dio = Dio();
+  var response = await dio.post(url, data: {'username': username,'password': password,});
+  return response;
 
-  if (response!.statusCode != 201) {
-    throw Exception('Failed to signup');
-  }
 }
 
-Future<void> profile() async {
+Future<String> profile() async {
   var response;
   SharedPreferences pref = await SharedPreferences.getInstance();
 
@@ -168,7 +148,7 @@ Future<void> profile() async {
   // Send the request
   response = await dio.get(url,);
   if (response.statusCode == 200) {
-    return response.data;
+    return response.data['username'];
   } else {
     // print(response!.request?.headers);
     throw Exception('Failed to retrieve profile');
@@ -227,3 +207,54 @@ Future<void> createChatForQr(int newFriend) async {
     throw Exception('Failed to send messages');
   }
 }
+
+
+
+class PowerShareAPI{
+  String endpoint = 'http://crowd.pythonanywhere.com/powershare/';
+  Future<List<PowerShareStationModel>> fetchAllStations() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(endpoint), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+    final response = await dio.get(endpoint);
+    final List mappable = jsonDecode(jsonEncode(response.data));
+    if (response.statusCode == 200) {
+      return mappable.map((e) => PowerShareStationModel.fromJson(e)).toList();
+    } else {
+      // print(response!.request?.headers);
+      throw Exception('Failed to load power share stations.');
+    }
+  }
+
+  fetchUserOrders() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    var dio = Dio();
+    var cj = CookieJar();
+    dio.interceptors.add(CookieManager(cj));
+
+    (cj).saveFromResponse(
+      Uri.parse(endpoint), 
+      [Cookie('jwt', pref.getString('token').toString())]
+    );
+
+    final response = await dio.get(endpoint+"/order");
+
+    if (response.statusCode == 200) {
+      final List result = jsonDecode(response.data);
+      return result.map((e) => PowerShareOrderModel.fromJson(e)).toList();
+    } else {
+      // print(response!.request?.headers);
+      throw Exception('Failed to load power share stations.');
+    }
+  }
+}
+
+final powerShareStationProvider = Provider<PowerShareAPI>((ref)=>PowerShareAPI());
+

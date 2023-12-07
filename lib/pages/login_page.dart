@@ -1,8 +1,13 @@
+import 'package:crowd_front_end/pages/combined.dart';
 import 'package:crowd_front_end/pages/home.dart';
+import 'package:crowd_front_end/pages/signup_page.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:crowd_front_end/components/my_button.dart';
 import 'package:crowd_front_end/components/my_textfield.dart';
 import 'package:crowd_front_end/components/square_tile.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_service.dart';
 
@@ -86,9 +91,27 @@ class LoginPage extends StatelessWidget {
               MyButton(
                 onTap: () async {
                   final prefs = await SharedPreferences.getInstance();
-                  final token = await login(usernameController.text, passwordController.text);
-                  prefs.setString('token', token);
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(token: token,)),);
+                  try {
+                    var response = await login(usernameController.text, passwordController.text);
+                    if(response.statusCode == 200) {
+                      prefs.setString('token', response.data['jwt']);
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NewHomePage(token: response.data['jwt'],)),);
+                    }else{
+                      QuickAlert.show(
+                        context: context,
+                        type: QuickAlertType.error,
+                        title: 'Oops...',
+                        text: response.statusMessage,
+                      );
+                    }
+                  } on DioException catch(e){
+                    QuickAlert.show(
+                      context: context,
+                      type: QuickAlertType.error,
+                      title: 'Oops...',
+                      text: 'Username and/or Password incorrect.',
+                    );
+                  }                    
                 },
               ),
 
@@ -144,18 +167,20 @@ class LoginPage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Not a member?',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Register now',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => SignupPage()));
+                    },
+                    child: const Text(
+                        'Register now',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+  
+                    
+                  )
                 ],
               )
             ],

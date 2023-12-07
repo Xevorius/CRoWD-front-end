@@ -1,3 +1,4 @@
+import 'package:crowd_front_end/pages/Stations_page.dart';
 import 'package:crowd_front_end/pages/home%20tabs/map_tab.dart';
 import 'package:crowd_front_end/pages/home%20tabs/profile_tab.dart';
 import 'package:crowd_front_end/pages/home%20tabs/chat_tab.dart';
@@ -14,8 +15,9 @@ class HomePage extends StatelessWidget{
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Center(child: Text('C R o W D')),
-        ),
+          title: const Center(child: Text('C R o W D', style: TextStyle(
+                        color: Colors.deepPurple),
+        ))),
         body: const Column(
           children: [
             TabBar(
@@ -42,7 +44,7 @@ class HomePage extends StatelessWidget{
             ),
             Expanded(
               child: TabBarView(children: [
-                ChatTab(),
+                StationsTab(),
                 MapTab(),
                 ProfileTab()
               ]),
