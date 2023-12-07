@@ -47,7 +47,7 @@ class NewHomePage extends StatelessWidget {
             elevation: 3.0,
             isFrostedGlass: true,
             shadowColor: Colors.purple.withOpacity(0.20),
-            child: const Center(child: Text("Balance: ", style: TextStyle(fontSize: 25, color: Colors.white70)),),
+            child: const Center(child: Text("Balance: ", style: TextStyle(fontSize: 25, color: Colors.black)),),
           ),
         Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: ElevatedButton(
           onPressed:  () async {
@@ -76,9 +76,11 @@ class NewHomePage extends StatelessWidget {
   Widget headerWidget(BuildContext context) {
     return Container(
       color: Colors.deepPurple[200],
-      child: Center(
-        child: 
-        FutureBuilder<String>(
+      child: 
+        Stack(children: [Center(child: ClipRRect(
+        borderRadius: BorderRadius.circular(50.0),
+        child: Image.asset('lib/images/google.png', height: 100,))),Center(child: Padding(padding: const EdgeInsets.symmetric(vertical: 50),
+        child:         FutureBuilder<String>(
         future: profile(), // async work
         builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
            switch (snapshot.connectionState) {
@@ -92,13 +94,13 @@ class NewHomePage extends StatelessWidget {
                  return Text(snapshot.data.toString(),style: Theme.of(context)
               .textTheme
               .displayMedium!
-              .copyWith(color: Colors.white70),);
+              .copyWith(color: Colors.grey[800]),);
               }
         
             }
           },
-        ),
-      )
+        )))
+        ,])
     );
   }
 }

@@ -45,34 +45,20 @@ class _MapTab extends ConsumerState<MapTab> with OSMMixinObserver {
           OSMFlutter(
             controller: mapcontroller,
             osmOption: OSMOption(
-                
-                enableRotationByGesture: true,
+                enableRotationByGesture: false,
                 zoomOption: const ZoomOption(
                   initZoom: 8,
                   minZoomLevel: 3,
                   maxZoomLevel: 19,
                   stepZoom: 1.0,
                 ),
-                staticPoints: [],
-                roadConfiguration: const RoadOption(
-                  roadColor: Colors.blueAccent,
-                ),
-                markerOption: MarkerOption(
-                  defaultMarker: const MarkerIcon(
-                    icon: Icon(
-                      Icons.person_pin_circle,
-                      color: Colors.blue,
-                      size: 56,
-                    ),
-                  ),
-                ),
                 showDefaultInfoWindow: false,
                 userLocationMarker: UserLocationMaker(
                 personMarker: const MarkerIcon(
                   icon: Icon(
-                    Icons.location_pin,
-                    color: Colors.red,
-                    size: 48,
+                    Icons.circle,
+                    color: Colors.deepPurple,
+                    size: 20,
                   ),
                 ),
                 directionArrowMarker: const MarkerIcon(
@@ -114,8 +100,7 @@ class _MapTab extends ConsumerState<MapTab> with OSMMixinObserver {
                         _data.when(
                           data: (_data){
                             List<PowerShareStationModel> powerShareStationList = _data.map((e) => e).toList();
-                            return
-                        Expanded(child: ListView.builder(
+                            return Expanded(child: ListView.builder(
                           controller: controller,
                           itemCount: powerShareStationList.length,
                           itemBuilder: (_,index){
@@ -157,11 +142,7 @@ class _MapTab extends ConsumerState<MapTab> with OSMMixinObserver {
     await mapcontroller.setMarkerOfStaticPoint(
       id: station.model,
       markerIcon: MarkerIcon(
-        iconWidget: Image.asset(
-          "assets/img/pickup_pin.png",
-          width: 80,
-          height: 80,
-        ),
+        icon: Icon(Icons.battery_2_bar_rounded, color: Colors.deepPurple[300],)
       ),
     );
 
@@ -171,10 +152,5 @@ class _MapTab extends ConsumerState<MapTab> with OSMMixinObserver {
   }
   
   @override
-  Future<void> mapIsReady(bool isReady) async {
-    if (isReady) {
-      // await mapcontroller.currentLocation();
-      // await mapcontroller.enableTracking();
-    }
-  }
+  Future<void> mapIsReady(bool isReady) async {}
 }

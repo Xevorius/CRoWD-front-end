@@ -3,10 +3,14 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:crowd_front_end/api_service.dart';
+import 'package:crowd_front_end/pages/combined.dart';
 import 'package:crowd_front_end/pages/home.dart';
+import 'package:crowd_front_end/pages/login_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class QRViewExample extends StatefulWidget {
@@ -126,13 +130,20 @@ class _QRViewExampleState extends State<QRViewExample> {
       setState(() async {
         result = scanData;
         if (result!=null){
-          final prefs = await SharedPreferences.getInstance();
           await controller.pauseCamera();
-          print(result!.code.toString());
+          // ignore: use_build_context_synchronously
+          QuickAlert.show(
+              context: context,
+              type: QuickAlertType.confirm,
+              text: 'Do you want to logout',
+              confirmBtnText: 'Yes',
+              cancelBtnText: 'No',
+              confirmBtnColor: Colors.green,
+              onConfirmBtnTap: () async {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              }
+            );
           var decoded = jsonDecode(result!.code.toString().replaceAll("'", '"'));
-          print(decoded);
-          createChatForQr(decoded['id']);
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => HomePage(token: prefs.getString("token").toString(),)), (Route<dynamic> r) => false);
         }
       });
     });
